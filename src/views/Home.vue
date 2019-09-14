@@ -1,13 +1,13 @@
 <template>
-  <HelloWorld />
+  <DragAndDrop />
 </template>
 
 <script>
-import HelloWorld from '../components/HelloWorld';
+import DragAndDrop from '../components/DragAndDrop';
 
 export default {
   components: {
-    HelloWorld,
+    DragAndDrop,
   },
 };
 </script>
