@@ -15,7 +15,7 @@
                 </v-avatar>
                   {{file.name}}
                   <br>
-                  {{file.size/100}} KB
+                  {{file.size/1000}} KB
                 <template v-slot:actions>
                   <v-btn class="ma-2" color="red darken-3" dark @click="removeFile(key)">Remove
                     <v-icon dark right>delete</v-icon>
@@ -31,7 +31,7 @@
             </v-btn>
           </v-card-actions>
         </v-card>
-        <v-progress-linear rounded indeterminate color="purple darken-3" v-if="uploadPercentage > 0 && files.length > 0" max="100" :value.prop="uploadPercentage"></v-progress-linear>
+        <v-progress-linear rounded color="purple darken-3" v-if="uploadPercentage > 0 && files.length > 0" max="100" :value.prop="uploadPercentage"></v-progress-linear>
       </div>
     </v-row>
   </v-layout>
@@ -107,7 +107,7 @@ import axios from 'axios';
           let file = this.files[i];
           formData.append('files[' + i + ']', file);
         }
-        axios.post( '/file-drag-drop',
+        axios.post('/file-drag-drop',
           formData,
           {
             headers: {
