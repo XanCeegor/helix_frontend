@@ -1,165 +1,235 @@
-<template>      
-    <v-layout row wrap>
-     <v-row justify="center" align="center">
-      <div id="file-drag-drop">
-        <v-card max-width="750px">
-          <v-card-title class="justify-center">Dump your files below</v-card-title>
-          <v-card-text>
-            <v-form id="fileform">
-              <span class="drop-files">Drop the files here!</span>
-            </v-form>
-            <div v-for="(file) in files" :key="file.name">
-              <v-banner two-line>
-                <v-avatar slot="icon" color="purple darken-3" size="40">
-                  <v-icon color="white">insert_photo</v-icon>
-                </v-avatar>
-                  {{file.name}}
-                  <br>
-                  {{file.size/1000}} KB
-                <template v-slot:actions>
-                  <v-btn class="ma-2" color="red darken-3" dark @click="removeFile(key)">Remove
-                    <v-icon dark right>delete</v-icon>
-                  </v-btn>
-                </template>
-              </v-banner>
-            </div>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn @click="submitFiles()" v-show="files.length > 0" color="purple darken-3">Upload
-              <v-icon right>cloud_upload</v-icon>
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-        <v-progress-linear rounded color="purple darken-3" v-if="uploadPercentage > 0 && files.length > 0" max="100" :value.prop="uploadPercentage"></v-progress-linear>
+
+<template>
+<div>
+  <v-row>
+    <v-col class="display-1">
+      <div class="text-center display-3">
+        Welcome to <span class="font-weight-thin">Helix</span>
       </div>
+    </v-col>
+  </v-row>
+  <br>
+  <transition name="fade slide">
+    <v-row v-if="isUploading === false && doneUploading === false">
+      <v-col>
+        <div id="file-drag-drop" class="uploader"
+        @dragenter="onDragEnter"
+        @dragleave="onDragLeave"
+        @dragover.prevent
+        @drop="onDrop"
+        :class="{dragging: isDragging}">
+          <div>
+            <v-icon size="85">backup</v-icon><br>
+            <p>Drag & drop your files here</p>
+            <div>OR</div>
+            <div class="file-input">
+                <label for="file">Select a file</label>
+                <input type="file" id="file" @change="onInputChange" multiple>
+            </div>
+          </div>
+        </div>
+      </v-col>
     </v-row>
-  </v-layout>
+  </transition>
+  <div v-show="files.length > 0">
+    <v-row>
+      <v-col lg4 class="display-1 font-weight-thin">
+        Files to Upload
+      </v-col>
+      <v-col class="display-1 text-center font-weight-thin">
+        {{files.length}} File(s) | {{totalSize}} total
+      </v-col>
+      <v-col lg4 class="display-1 text-right">
+        <v-btn v-if="!isUploading" large @click="upload()" color="purple darken-3">Upload
+          <v-icon right>cloud_upload</v-icon>
+        </v-btn>
+      </v-col>
+    </v-row>
+    <hr>
+    <br>
+    <v-row v-if="isUploading">
+      <v-col lg12>
+        <div class="text-center mb-2">
+          Uploading... {{uploadPercentage}}%
+        </div>
+        <v-progress-linear rounded height="10" color="purple darken-3" max="100" :value="uploadPercentage"></v-progress-linear>
+      </v-col>
+    </v-row>
+  </div>
+  <div v-for="(file, index) in files" :key="index" >
+    <v-banner class="files" two-line >
+      <v-avatar slot="icon" color="purple darken-3" size="40">
+        <v-icon color="white">insert_photo</v-icon>
+      </v-avatar>
+        {{file.name}}
+        <br>
+        <span class="size" v-text="getFileSize(files[index].size)"></span>
+      <template v-slot:actions>
+        <v-btn class="ma-2" color="red darken-3" v-if="!isUploading" dark @click="removeFile(index)">Remove
+          <v-icon dark right>delete</v-icon>
+        </v-btn>
+      </template>
+    </v-banner>
+  </div>
+  <!-- ShareDownload component -->
+  <transition name="fade">
+    <ShareDownload :downloadLink="downloadLink" v-if="doneUploading"/>
+  </transition>
+</div>
 </template>
 
 <script>
 import axios from 'axios';
+import ShareDownload from "./ShareDownload";
   export default {
-    data(){
-      return {
-        dragAndDropCapable: false,
+    components: {
+      ShareDownload
+    },
+    data: () => ({
+        isDragging: false,
+        dragCount: 0,
         files: [],
         uploadPercentage: 0,
-      }
-    },
-    mounted(){
-      this.dragAndDropCapable = this.determineDragAndDropCapable();
-      if( this.dragAndDropCapable ){
-        ['drag', 'dragstart', 'dragend', 'dragover', 'dragenter', 'dragleave', 'drop'].forEach( function(event) {
-          document.querySelector('#fileform').addEventListener(event, function(e){
-            e.preventDefault();
-            e.stopPropagation();
-          }.bind(this), false);
-        }.bind(this));
-        document.querySelector('#fileform').addEventListener('drop', function(e){
-          for(let i = 0; i < e.dataTransfer.files.length; i++){
-            // let n = e.dataTransfer.files[i].type;
-            if(e.dataTransfer.files[i].type.includes("image")){
-              this.icon = 'insert_photo';
-            }
-            else if(e.dataTransfer.files[i].type.includes("compressed") || e.dataTransfer.files[i].type.includes("zip")){
-              this.icon = 'folder';
-            }
-            
-            this.files.push(e.dataTransfer.files[i]);
-            this.getImagePreviews();
-          }
-        }.bind(this));
-        document.querySelector('#fileform').on('drop')
+        isUploading: false,
+        totalBytes: 0,
+        downloadLink: 'https://helix.co/download/fn2DE3T',
+        doneUploading: false,
+        
+    }),
+    computed: {
+      totalSize: function(){
+        return this.getFileSize(this.totalBytes);
       }
     },
     methods: {
-      // Alerts
-      successAlert() {
-        this.$swal("Files successfully uploaded!", "", "success");
+      onDragEnter(e){
+        e.preventDefault();
+        this.dragCount++;
+        this.isDragging = true;
       },
-      determineDragAndDropCapable(){
-        var div = document.createElement('div');
-        return ( ( 'draggable' in div )
-                || ( 'ondragstart' in div && 'ondrop' in div ) )
-                && 'FormData' in window
-                && 'FileReader' in window;
+      onDragLeave(e){
+        e.preventDefault();
+        this.dragCount--;
+        if (this.dragCount <= 0)
+          this.isDragging = false;
       },
-      //gets the image preview for the file.
-      getImagePreviews(){
-        for(let i = 0; i < this.files.length; i++){
-          if(/\.(jpe?g|png|gif)$/i.test(this.files[i].name)){
-            let reader = new FileReader();
-            reader.addEventListener("load", function(){
-              this.$refs['preview'+parseInt( i )][0].src = reader.result;
-            }.bind(this), false);
-            reader.readAsDataURL( this.files[i] );
-          }else{
-            this.$nextTick(function(){
-              this.$refs['preview'+parseInt( i )][0].src = '/images/file.png';
-            });
-          }
-        }
-      },
-      submitFiles(){
-        let formData = new FormData();
-        for(var i = 0; i < this.files.length; i++){
-          let file = this.files[i];
-          formData.append('files[' + i + ']', file);
-        }
-        axios.post('/file-drag-drop',
-          formData,
-          {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            },
-            onUploadProgress: function(progressEvent) {
-                this.uploadPercentage = parseInt(Math.round((progressEvent.loaded * 100) / progressEvent.total));
-            }.bind(this)
-          }
-        ).then(function(){
-          this.successAlert();
+      onDrop(e){
+        e.preventDefault();
+        e.stopPropagation();
+        this.isDragging = false;
+        const types = ['application/x-tar'];
+        const files = e.dataTransfer.files;
+        Array.from(files).forEach(file => {
+          console.log(file.type);
+          this.files.push(file);
+          this.totalBytes += file.size;
         })
-        .catch(function(){
+      },
+      onInputChange(e) {
+        const files = e.target.files;
+        Array.from(files).forEach(file => {
+          this.totalBytes += file.size;
+          this.files.push(file);
         });
       },
-      removeFile( key ){
-        this.files.splice( key, 1 );
+      removeFile(index){
+        this.totalBytes -= this.files[index].size;
+        this.files.splice(index, 1);
+      },
+      getFileSize(size){
+        const fSExt = ['Bytes', 'KB', 'MB', 'GB'];
+        let i = 0;
+        
+        while(size > 900) {
+          size /= 1024;
+          i++;
+        }
+        return `${(Math.round(size * 100) / 100)} ${fSExt[i]}`;
+      },
+      upload(){
+        this.isUploading = true;
+        const formData = new FormData();
+        
+        this.files.forEach(file => {
+            formData.append('files[]', file, file.name);
+        });
+        axios.post('http://localhost:8000/api/upload', formData,
+          {
+            onUploadProgress: function(progressEvent) {
+              this.uploadPercentage = parseInt(Math.round((progressEvent.loaded * 100) / progressEvent.total));
+            }.bind(this)
+          })
+          .then(response => {
+              this.files = [];
+              this.uploadPercentage = 0;
+              this.totalBytes = 0;
+              this.isUploading = false;
+              this.doneUploading = true;
+          })
       }
     }
   }
 </script>
 
-<style>
-  form{
-    display: block;
-    height: 400px;
-    width: 450px;
-    background: #424242;
-    margin: auto;
-    margin-top: 40px;
-    text-align: center;
-    line-height: 400px;
-    border-radius: 4px;
+<style lang="scss" scoped>
+.uploader {
+  width: 100%;
+  background: #444444;
+  color: #fff;
+  padding: 40px 15px;
+  margin-top: 15px;
+  margin-bottom: 10px;
+  text-align: center;
+  border-radius: 10px;
+  font-size: 20px;
+  position: relative;
+  &.dragging {
+    background: #555555;
   }
-
-  div.file-listing{
-    width: 400px;
-    margin: auto;
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
-  }
-
-  a.submit-button{
-    display: block;
-    margin: auto;
-    text-align: center;
+  .file-input {
     width: 200px;
-    padding: 10px;
-    text-transform: uppercase;
-    background-color: #CCC;
-    color: white;
-    font-weight: bold;
-    margin-top: 20px;
+    margin: auto;
+    height: 68px;
+    position: relative;
+    label,
+    input {
+        background: #fff;
+        color: #5a5a5a;
+        width: 100%;
+        position: absolute;
+        left: 0;
+        top: 0;
+        padding: 10px;
+        border-radius: 4px;
+        margin-top: 7px;
+        cursor: pointer;
+    }
+    input {
+        opacity: 0;
+        z-index: -2;
+    }
   }
+}
+
+.slide-fade-enter-active {
+  transition: all .6s ease;
+}
+.slide-fade-leave-active {
+  transition: all .6s cubic-bezier(1.0, 0.5, 0.8, 1.0);
+}
+.slide-fade-enter, .slide-fade-leave-to
+/* .slide-fade-leave-active below version 2.1.8 */ {
+  transform: translateX(10px);
+  opacity: 0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity .8s
+}
+
+.fade-enter,
+.fade-leave-to {
+    opacity: 0
+}
 </style>

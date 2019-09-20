@@ -2,17 +2,13 @@
   <div>
     <v-app-bar color="purple darken-3" dark>
       <v-toolbar-title class="font-weight-thin">Helix</v-toolbar-title>
-
       <div class="flex-grow-1"></div>
-
       <v-btn color="purple">
           Sign In
       </v-btn>
-
       <v-btn icon>
         <v-icon>mdi-magnify</v-icon>
       </v-btn>
-
       <v-menu left bottom>
         <template v-slot:activator="{ on }">
           <v-btn icon v-on="on">
