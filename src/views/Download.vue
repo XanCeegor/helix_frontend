@@ -1,53 +1,51 @@
 <template>
+<transition name="fade slide">
   <div class="Download">
-    <v-row>
-        <v-col class="display-1">
-            <div class="text-center display-3">
-                <span class="font-weight-thin">Helix</span>
-            </div>
-        </v-col>
-    </v-row>
+    
     <v-row>
         <v-col class="headline">
             <div class="text-center">
                 <span class="font-weight-thin">
-                    Uploaded: 21 Sept 2019 | Deleting: 28 Sept 2019
+                    Uploaded: {{formatDate(files[0].created_at)}} | Deleting: 28 Sept 2019
                 </span> 
             </div>
         </v-col>
     </v-row>
     <v-row max-width="1280">
-        <v-col cols="auto" class="display-1 font-weight-thin mr-auto">
-            5 File(s) | 230.34 MB total
+        <v-col cols="4" class="display-1 font-weight-thin mr-auto">
+            {{files.length}} File(s) | {{getFileSize(totalBytes)}} total
         </v-col>
-        <v-col cols="auto" class="display-1 text-right">
-            <v-btn large color="purple darken-3">Download All
+        <v-col v-if="isCompressing" cols="4" class="display-1 text-center font-weight-thin">
+             Compressing files... <v-progress-circular indeterminate color="purple"/>
+        </v-col>
+        <v-col cols="4" class="display-1 text-right">
+            <v-btn v-if="!isCompressing" large color="purple darken-3" @click="downloadZIP">Download All
             <v-icon right>archive</v-icon>
             </v-btn>
+            
         </v-col>
     </v-row>
     <hr>
     <br>
     <v-row>
-        <v-col align="center" justify="center">
-            <v-banner max-width="1280" class="files">
+        <v-col align="center" justify="center" >
+            <v-banner max-width="1280" class="files" v-for="file in files" :key="file.id">
                 <v-avatar slot="icon" color="purple darken-3" size="40">
                     <v-icon color="white">insert_photo</v-icon>
                 </v-avatar>
-                    thisismyoriginalfilename.jpg
+                    {{file.originalName}}
                     <br>
-                    <span class="size" v-text="getFileSize()"></span>
+                    <span class="size" v-text="getFileSize(file.size)"></span>
                 <template v-slot:actions>
                     <!-- download button -->
                     <v-tooltip top>
                         <template v-slot:activator="{on}">
-                        <v-btn text icon v-on="on" large><v-icon >cloud_download</v-icon></v-btn>
+                        <v-btn text icon v-on="on" large @click="downloadFile(file)"><v-icon>cloud_download</v-icon></v-btn>
                         </template>
                         <span>Download</span>
                     </v-tooltip>
                 </template>
             </v-banner>
-            
         </v-col>
     </v-row>
 
@@ -56,17 +54,80 @@
         <v-btn color="pink" text @click="snackBar = false">Close</v-btn>
     </v-snackbar>
 </div>
+</transition>
 </template>
 
 <script>
+import axios from 'axios';
 export default {
     props: ['id'],  //get the id of the upload
     data: () => ({
-        
+        files: [],
+        totalBytes: 0,
+        isCompressing: false,
     }),
+    created: function () {
+        this.getFiles();
+    },
     methods: {
-        getFileSize(){
-            return '12.34 MB'
+        formatDate(date){
+            var options = {year: 'numeric', month: 'long', day: 'numeric' };
+            var newDate = new Date(date);
+            return newDate.toLocaleDateString("en-US", options);
+        },
+        getTotalUploadSize(){
+            this.files.forEach(file  => {
+                this.totalBytes += file.size;
+            });
+        },
+        getFileSize(size){
+            const fSExt = ['Bytes', 'KB', 'MB', 'GB'];
+            let i = 0;
+            while(size > 900) {
+            size /= 1024;
+            i++;
+            }
+            return `${(Math.round(size * 100) / 100)} ${fSExt[i]}`;
+        },
+        getFiles(){
+            fetch(`http://localhost:8000/api/upload/${this.id}`)
+                .then(res => res.json())
+                .then(res => {
+                    this.files = res.data;
+                    this.getTotalUploadSize();
+                });
+        },
+        downloadFile(file){
+            axios({
+                url: `http://localhost:8000/api/downloadfile/${file.id}`,
+                method: 'GET',
+                responseType: 'blob',
+            }).then((response) => {
+                console.log(response.data);
+                var fileURL = window.URL.createObjectURL(new Blob([response.data]));
+                var fileLink = document.createElement('a');
+                fileLink.href = fileURL;
+                fileLink.setAttribute('download', file.originalName);
+                document.body.appendChild(fileLink);
+                fileLink.click();
+            });
+        },
+        downloadZIP(){
+            this.isCompressing = true;
+            axios({
+                url: `http://localhost:8000/api/downloadzip/${this.id}`,
+                method: 'GET',
+                responseType: 'blob',
+            }).then((response) => {
+                console.log(response.data);
+                var fileURL = window.URL.createObjectURL(new Blob([response.data]));
+                var fileLink = document.createElement('a');
+                fileLink.href = fileURL;
+                fileLink.setAttribute('download', 'download.zip');
+                document.body.appendChild(fileLink);
+                fileLink.click();
+                this.isCompressing = false;
+            });
         }
     }
 }
@@ -78,5 +139,18 @@ a{
 }
 .download{
   background-color: #808080;
+}
+
+/* Transitions */
+.slide-fade-enter-active {
+  transition: all .1s ease;
+}
+.slide-fade-leave-active {
+  transition: all .1s cubic-bezier(1.0, 0.5, 0.8, 1.0);
+}
+.slide-fade-enter, .slide-fade-leave-to
+/* .slide-fade-leave-active below version 2.1.8 */ {
+  transform: translateX(10px);
+  opacity: 0;
 }
 </style>

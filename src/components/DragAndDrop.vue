@@ -1,13 +1,12 @@
-
 <template>
 <div>
-  <v-row>
+  <!-- <v-row>
     <v-col class="display-1">
       <div class="text-center display-3">
         Welcome to <span class="font-weight-thin">Helix</span>
       </div>
     </v-col>
-  </v-row>
+  </v-row> -->
   <br>
   <transition name="fade slide">
     <v-row v-if="isUploading === false && doneUploading === false">
@@ -73,7 +72,7 @@
   </div>
   <!-- ShareDownload component -->
   <transition name="fade">
-    <ShareDownload :downloadLink="downloadLink" v-if="doneUploading"/>
+    <ShareDownload :downloadID="downloadID" v-if="doneUploading"/>
   </transition>
 </div>
 </template>
@@ -92,7 +91,7 @@ import ShareDownload from "./ShareDownload";
         uploadPercentage: 0,
         isUploading: false,
         totalBytes: 0,
-        downloadLink: 'https://helix.co/download/fn2DE3T',
+        downloadID: '',
         doneUploading: false,
         
     }),
@@ -139,7 +138,6 @@ import ShareDownload from "./ShareDownload";
       getFileSize(size){
         const fSExt = ['Bytes', 'KB', 'MB', 'GB'];
         let i = 0;
-        
         while(size > 900) {
           size /= 1024;
           i++;
@@ -153,13 +151,17 @@ import ShareDownload from "./ShareDownload";
         this.files.forEach(file => {
             formData.append('files[]', file, file.name);
         });
-        axios.post('http://localhost:8000/api/upload', formData,
+        axios.post('http://127.0.0.1:8000/api/upload', formData,
           {
-            onUploadProgress: function(progressEvent) {
-              this.uploadPercentage = parseInt(Math.round((progressEvent.loaded * 100) / progressEvent.total));
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            },
+            onUploadProgress: function( progressEvent ) {
+              this.uploadPercentage = parseInt( Math.round( ( progressEvent.loaded * 100 ) / progressEvent.total ) );
             }.bind(this)
           })
           .then(response => {
+              this.downloadID = response.data['success'];
               this.files = [];
               this.uploadPercentage = 0;
               this.totalBytes = 0;
@@ -211,6 +213,7 @@ import ShareDownload from "./ShareDownload";
   }
 }
 
+// Transitions
 .slide-fade-enter-active {
   transition: all .6s ease;
 }

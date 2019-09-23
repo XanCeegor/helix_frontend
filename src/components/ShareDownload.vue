@@ -9,9 +9,22 @@
                 <v-card-text>
                 <v-row class="download mx-10 my-3">
                     <v-col cols="auto" class="text-left display-1 ml-5 mr-auto">
-                        {{downloadLink}}
+                        https://helix.co/download/{{downloadID}}
                     </v-col>
                     <v-col cols="auto" class="text-right">
+                        <!-- copy button -->
+                        <v-tooltip top>
+                            <template v-slot:activator="{ on }">
+                                
+                                    <router-link :to="{name: 'download', params: { id: downloadID}}">
+                                        <v-btn text icon v-on="on">
+                                        <v-icon>arrow_forward</v-icon>
+                                        </v-btn>
+                                    </router-link>
+                                
+                            </template>
+                            <span>Go to Download</span>
+                        </v-tooltip>
                         <!-- share button -->
                         <v-tooltip top>
                             <template v-slot:activator="{on}">
@@ -23,8 +36,8 @@
                         <v-tooltip top>
                             <template v-slot:activator="{ on }">
                                 <v-btn text icon v-on="on"
-                                v-clipboard:copy="downloadLink"
-                                @click="snackBar = true">
+                                    v-clipboard:copy="downloadID"
+                                    @click="snackBar = true">
                                 <v-icon >file_copy</v-icon>
                                 </v-btn>
                             </template>
@@ -46,7 +59,7 @@
 <script>
 export default {
     props: [
-        'downloadLink'
+        'downloadID'
     ],
     data: () => ({
         snackBar: false
@@ -66,4 +79,6 @@ a{
 .card{
     border-radius: 15px;
 }
+
+
 </style>

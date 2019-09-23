@@ -1,13 +1,9 @@
 <template>
   <v-app>
     <Navbar/>
-    <v-container >
-    <!-- <v-row align="center" justify="center">
-      <v-col lg10 xs10> -->
-        <router-view/>
-      <!-- </v-col>
-    </v-row> -->
-  </v-container>
+    <v-container class="container">
+      <router-view/>
+    </v-container>
   </v-app>
 </template>
 
@@ -23,3 +19,9 @@ export default {
   }),
 };
 </script>
+
+<style >
+.container{
+  width: 85%;
+}
+</style>
