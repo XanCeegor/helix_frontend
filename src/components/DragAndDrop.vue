@@ -130,7 +130,8 @@ export default {
     totalBytes: 0,
     maxUploadSize: 524288000, //Max 500mb upload size
     downloadID: "",
-    doneUploading: false
+    doneUploading: false,
+    url: process.env.VUE_APP_URL
   }),
   computed: {
     totalSize: function() {
@@ -192,7 +193,7 @@ export default {
         formData.append("files[]", file, file.name);
       });
       axios
-        .post("http://test.test/api/upload", formData, {
+        .post(`${this.url}/api/upload`, formData, {
           headers: {
             "Content-Type": "multipart/form-data"
           },

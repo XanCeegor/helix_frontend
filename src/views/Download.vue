@@ -71,7 +71,8 @@ export default {
     files: [],
     totalBytes: 0,
     isCompressing: false,
-    isGettingDownload: false
+    isGettingDownload: false,
+    url: process.env.VUE_APP_URL
   }),
   created: function() {
     this.getFiles();
@@ -103,7 +104,7 @@ export default {
       return `${Math.round(size * 100) / 100} ${fSExt[i]}`;
     },
     getFiles() {
-      fetch(`http://test.test/api/upload/${this.id}`)
+      fetch(`${this.url}/api/upload/${this.id}`)
         .then(res => res.json())
         .then(res => {
           this.files = res.data;
@@ -113,7 +114,7 @@ export default {
     downloadFile(file) {
       this.isGettingDownload = true;
       axios({
-        url: `http://test.test/api/downloadfile/${file.id}`,
+        url: `${this.url}/api/downloadfile/${file.id}`,
         method: "GET",
         responseType: "blob"
       }).then(response => {
@@ -129,7 +130,7 @@ export default {
     downloadZIP() {
       this.isCompressing = true;
       axios({
-        url: `http://test.test/api/downloadzip/${this.id}`,
+        url: `${this.url}/api/downloadzip/${this.id}`,
         method: "GET",
         responseType: "blob"
       }).then(response => {
