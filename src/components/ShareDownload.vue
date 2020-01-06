@@ -9,7 +9,7 @@
               <v-col
                 cols="auto"
                 class="text-left display-1 ml-5 mr-auto"
-              >https://helix.co/download/{{downloadID}}</v-col>
+              >{{url + '/download/' + downloadID}}</v-col>
               <v-col cols="auto" class="text-right">
                 <!-- copy button -->
                 <v-tooltip top>
@@ -18,7 +18,7 @@
                       text
                       icon
                       v-on="on"
-                      v-clipboard:copy="downloadID"
+                      v-clipboard:copy="url + '/download/' + downloadID"
                       @click="snackBar = true"
                     >
                       <v-icon>file_copy</v-icon>
@@ -54,7 +54,8 @@
 export default {
   props: ["downloadID"],
   data: () => ({
-    snackBar: false
+    snackBar: false,
+    url: process.env.VUE_APP_URL
   })
 };
 </script>
