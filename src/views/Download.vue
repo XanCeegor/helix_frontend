@@ -14,20 +14,17 @@
         <v-col
           class="display-1 font-weight-thin mr-auto"
         >{{files.length}} File(s) | {{getFileSize(totalBytes)}} total</v-col>
-        <v-col v-if="isCompressing" class="display-1 text-center font-weight-thin">
-          Compressing files...
-          <v-progress-circular indeterminate color="purple" :width="2" :size="30" />
-        </v-col>
-        <v-col v-if="isGettingDownload" class="display-1 text-center font-weight-thin">
-          Preparing download
+        <v-col v-if="isDownloading" class="display-1 text-center font-weight-thin">
+          Preparing download...
           <v-progress-circular indeterminate color="purple" :width="2" :size="30" />
         </v-col>
         <v-col v-if="files.length > 1" class="display-1 text-right">
-          <v-btn v-if="!isCompressing" large color="purple darken-3" @click="downloadZIP">
+          <v-btn v-if="!isDownloading" large color="purple darken-3" @click="downloadZIP">
             Download All
             <v-icon right>archive</v-icon>
           </v-btn>
         </v-col>
+        <v-col v-if="files.length == 1"></v-col>
       </v-row>
       <hr />
       <br />
@@ -38,7 +35,6 @@
               <v-icon color="white">insert_photo</v-icon>
             </v-avatar>
             {{file.originalName}}
-            <!-- <br /> -->
             <div class="text-left" text v-text="getFileSize(file.size)"></div>
             <!-- download button -->
             <template v-slot:actions>
@@ -54,11 +50,6 @@
           </v-banner>
         </v-col>
       </v-row>
-
-      <v-snackbar top v-model="snackBar">
-        Download link copied to clipboard!
-        <v-btn color="pink" text @click="snackBar = false">Close</v-btn>
-      </v-snackbar>
     </div>
   </transition>
 </template>
@@ -70,9 +61,8 @@ export default {
   data: () => ({
     files: [],
     totalBytes: 0,
-    isCompressing: false,
-    isGettingDownload: false,
-    url: process.env.VUE_APP_URL
+    isDownloading: false,
+    url: process.env.VUE_APP_API_URL
   }),
   created: function() {
     this.getFiles();
@@ -109,26 +99,35 @@ export default {
         .then(res => {
           this.files = res.data;
           this.getTotalUploadSize();
+        })
+        .catch(function(error) {
+          // handle error
+          alert(error);
         });
     },
     downloadFile(file) {
-      this.isGettingDownload = true;
+      this.isDownloading = true;
       axios({
         url: `${this.url}/api/downloadfile/${file.id}`,
         method: "GET",
         responseType: "blob"
-      }).then(response => {
-        var fileURL = window.URL.createObjectURL(new Blob([response.data]));
-        var fileLink = document.createElement("a");
-        fileLink.href = fileURL;
-        fileLink.setAttribute("download", file.originalName);
-        document.body.appendChild(fileLink);
-        fileLink.click();
-        this.isGettingDownload = false;
-      });
+      })
+        .then(response => {
+          var fileURL = window.URL.createObjectURL(new Blob([response.data]));
+          var fileLink = document.createElement("a");
+          fileLink.href = fileURL;
+          fileLink.setAttribute("download", file.originalName);
+          document.body.appendChild(fileLink);
+          fileLink.click();
+          this.isDownloading = false;
+        })
+        .catch(function(error) {
+          // handle error
+          alert(error);
+        });
     },
     downloadZIP() {
-      this.isCompressing = true;
+      this.isDownloading = true;
       axios({
         url: `${this.url}/api/downloadzip/${this.id}`,
         method: "GET",
@@ -140,7 +139,7 @@ export default {
         fileLink.setAttribute("download", "download.zip");
         document.body.appendChild(fileLink);
         fileLink.click();
-        this.isCompressing = false;
+        this.isDownloading = false;
       });
     }
   }
