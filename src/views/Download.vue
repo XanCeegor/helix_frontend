@@ -32,7 +32,7 @@
         <v-col align="center" justify="center">
           <v-banner max-width="1280" class="files" v-for="file in files" :key="file.id">
             <v-avatar slot="icon" color="purple darken-3" size="40">
-              <v-icon color="white">insert_photo</v-icon>
+              <v-icon color="white">insert_drive_file</v-icon>
             </v-avatar>
             {{file.originalName}}
             <div class="text-left" text v-text="getFileSize(file.size)"></div>
