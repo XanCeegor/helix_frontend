@@ -52,7 +52,7 @@
         >{{files.length}} File(s) | {{totalSize}} total</v-col>
         <v-col lg4 class="display-1 text-right">
           <v-btn
-            v-if="!isUploading && totalBytes < maxUploadSize"
+            v-if="(!isUploading) && (totalBytes < maxUploadSize) && (exeFiles.length === 0)"
             large
             @click="upload()"
             color="purple darken-3"
@@ -60,20 +60,37 @@
             Upload
             <v-icon right>cloud_upload</v-icon>
           </v-btn>
-          <div style="color: #c62828;" v-if="totalBytes >= maxUploadSize">Max upload size is 500MB</div>
+
+          <!-- Warnings -->
+          <div
+            style="color: #c62828;"
+            class="font-weight-thin"
+            v-if="totalBytes >= maxUploadSize"
+          >Max upload size is 500MB</div>
+          <v-tooltip top>
+            <template v-slot:activator="{ on }">
+              <div
+                v-on="on"
+                style="color: #c62828;"
+                class="font-weight-thin"
+                v-if="exeFiles.length > 0"
+              >.exe files are not allowed</div>
+            </template>
+            <span>But you can add .exe files to an archive file (ZIP, 7Z, etc) and then upload them.</span>
+          </v-tooltip>
         </v-col>
       </v-row>
       <hr />
-      <br />
+
       <v-row v-if="isUploading">
         <v-col lg12>
           <div
             v-if="uploadPercentage < 100"
-            class="text-center mb-2"
+            class="display-1 text-center font-weight-thin my-2"
           >Uploading... {{uploadPercentage}}%</div>
-          <div v-if="uploadPercentage == 100" class="text-center mb-2">
-            Processing files
-            <v-progress-circular class="ml-1" indeterminate :width="2" :size="20" color="purple"></v-progress-circular>
+          <div v-if="uploadPercentage == 100" class="display-1 text-center font-weight-thin my-2">
+            Processing files...
+            <v-progress-circular class="ml-1" indeterminate :width="2" :size="30" color="purple"></v-progress-circular>
           </div>
           <v-progress-linear
             rounded
@@ -85,10 +102,12 @@
         </v-col>
       </v-row>
     </div>
+
+    <!-- File list -->
     <div v-for="(file, index) in files" :key="index">
-      <v-banner class="files" two-line>
+      <v-banner class="files" v-bind:class="{ exe: file.name.includes('.exe') }" two-line>
         <v-avatar slot="icon" color="purple darken-3" size="40">
-          <v-icon color="white">insert_photo</v-icon>
+          <v-icon color="white">insert_drive_file</v-icon>
         </v-avatar>
         {{file.name}}
         <br />
@@ -125,13 +144,14 @@ export default {
     isDragging: false,
     dragCount: 0,
     files: [],
+    exeFiles: [],
     uploadPercentage: 0,
     isUploading: false,
     totalBytes: 0,
     maxUploadSize: 524288000, //Max 500mb upload size
     downloadID: "",
     doneUploading: false,
-    url: process.env.VUE_APP_URL
+    url: process.env.VUE_APP_API_URL
   }),
   computed: {
     totalSize: function() {
@@ -147,7 +167,9 @@ export default {
     onDragLeave(e) {
       e.preventDefault();
       this.dragCount--;
-      if (this.dragCount <= 0) this.isDragging = false;
+      if (this.dragCount <= 0) {
+        this.isDragging = false;
+      }
     },
     onDrop(e) {
       e.preventDefault();
@@ -156,6 +178,7 @@ export default {
       const files = e.dataTransfer.files;
       Array.from(files).forEach(file => {
         if (file.size < 260144000) {
+          this.checkFileForExe(file); //.exe files are not allowed
           this.files.push(file);
           this.totalBytes += file.size;
         }
@@ -166,6 +189,7 @@ export default {
       const files = e.target.files;
       Array.from(files).forEach(file => {
         if (file.size < 260144000) {
+          this.checkFileForExe(file); //.exe files are not allowed
           this.totalBytes += file.size;
           this.files.push(file);
         }
@@ -173,6 +197,10 @@ export default {
       this.$emit("filesAdded", this.files.length);
     },
     removeFile(index) {
+      if (this.files[index].name.includes(".exe")) {
+        const i = this.exeFiles.indexOf(this.files[index].name);
+        this.exeFiles.splice(i, 1);
+      }
       this.totalBytes -= this.files[index].size;
       this.files.splice(index, 1);
       this.$emit("filesAdded", this.files.length);
@@ -210,13 +238,25 @@ export default {
           this.totalBytes = 0;
           this.isUploading = false;
           this.doneUploading = true;
+        })
+        .catch(function(error) {
+          // handle error
+          alert(error);
         });
+    },
+    checkFileForExe(file) {
+      if (file.name.includes(".exe")) {
+        this.exeFiles.push(file.name);
+      }
     }
   }
 };
 </script>
 
 <style lang="scss" scoped>
+.exe {
+  background-color: #781a1a;
+}
 .uploader {
   width: 100%;
   background: #444444;
