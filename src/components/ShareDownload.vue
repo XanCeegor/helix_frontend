@@ -55,7 +55,7 @@ export default {
   props: ["downloadID"],
   data: () => ({
     snackBar: false,
-    url: process.env.VUE_APP_API_URL
+    url: process.env.VUE_APP_FRONTEND_URL
   })
 };
 </script>
