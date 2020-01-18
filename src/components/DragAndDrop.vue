@@ -32,12 +32,12 @@
             </div>
             <div class="font-weight-light body-2 mt-2">
               Max file size:
-              <span class="font-weight-regular">250MB</span>
+              <span class="font-weight-regular">{{getFileSize(maxFileSize)}}</span>
             </div>
             <div class="font-weight-light body-2">Larger files will be ignored</div>
             <div class="font-weight-light body-2">
               Max total upload size:
-              <span class="font-weight-regular">500MB</span>
+              <span class="font-weight-regular">{{getFileSize(maxUploadSize)}}</span>
             </div>
           </div>
         </div>
@@ -66,7 +66,7 @@
             style="color: #c62828;"
             class="font-weight-thin"
             v-if="totalBytes >= maxUploadSize"
-          >Max upload size is 500MB</div>
+          >Max upload size is {{getFileSize(maxUploadSize)}}</div>
           <v-tooltip top>
             <template v-slot:activator="{ on }">
               <div
@@ -148,7 +148,8 @@ export default {
     uploadPercentage: 0,
     isUploading: false,
     totalBytes: 0,
-    maxUploadSize: 524288000, //Max 500mb upload size
+    maxFileSize: process.env.VUE_APP_MAX_FILE_SIZE,
+    maxUploadSize: process.env.VUE_APP_MAX_UPLOAD_SIZE,
     downloadID: "",
     doneUploading: false,
     url: process.env.VUE_APP_API_URL
@@ -177,7 +178,7 @@ export default {
       this.isDragging = false;
       const files = e.dataTransfer.files;
       Array.from(files).forEach(file => {
-        if (file.size < 260144000) {
+        if (file.size < this.maxFileSize) {
           this.checkFileForExe(file); //.exe files are not allowed
           this.files.push(file);
           this.totalBytes += file.size;
@@ -188,7 +189,7 @@ export default {
     onInputChange(e) {
       const files = e.target.files;
       Array.from(files).forEach(file => {
-        if (file.size < 260144000) {
+        if (file.size < this.maxFileSize) {
           this.checkFileForExe(file); //.exe files are not allowed
           this.totalBytes += file.size;
           this.files.push(file);
@@ -212,7 +213,7 @@ export default {
         size /= 1024;
         i++;
       }
-      return `${Math.round(size * 100) / 100} ${fSExt[i]}`;
+      return `${Math.round(size * 100) / 100}${fSExt[i]}`;
     },
     upload() {
       this.isUploading = true;
@@ -278,8 +279,8 @@ export default {
     position: relative;
     label,
     input {
-      background: #fff;
-      color: #5a5a5a;
+      background: #6a1b9a;
+      color: #fff;
       width: 100%;
       position: absolute;
       left: 0;

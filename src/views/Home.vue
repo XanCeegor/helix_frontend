@@ -27,7 +27,7 @@
           <div class="display-1 font-weight-light mt-3">Anonymous</div>
           <div
             class="body-1 font-weight-light mt-2"
-          >We don't keep any logs of your computer or you uploaded files. We only store meta-data related to the files you upload, but we do not store any personal information related to you.</div>
+          >We like privacy. We don't keep any logs of your computer or you uploaded files. We only store meta-data related to the files you upload, but we do not store any personal information about to you.</div>
         </v-col>
         <v-col>
           <v-avatar color="grey darken-2" size="100">
@@ -36,7 +36,7 @@
           <div class="display-1 font-weight-light mt-3">Secure</div>
           <div
             class="body-1 font-weight-light mt-2"
-          >All uploaded files are encrypted. Meaning that no one will be able to access your files unless you provide them with the download link. Your files are decrypted before being downloaded.</div>
+          >All uploaded files are encrypted. This ensures that no one will be able to access your files (not even us) unless you provide them with the download link. Your files are then decrypted before being downloaded.</div>
         </v-col>
         <v-col>
           <v-avatar color="grey darken-2" size="100">
@@ -63,6 +63,9 @@ export default {
   data: () => ({
     fileCount: 0
   }),
+  created() {
+    document.title = "Helix | Small files need love too";
+  },
   methods: {
     updateFileCount(e) {
       this.fileCount = e;

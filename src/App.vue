@@ -1,27 +1,32 @@
 <template>
   <v-app>
-    <Navbar/>
+    <Navbar />
     <v-container class="container">
-      <router-view/>
+      <router-view />
     </v-container>
   </v-app>
 </template>
 
 <script>
-import Navbar from './components/Navbar'
+import Navbar from "./components/Navbar";
 export default {
-  name: 'App',
+  name: "App",
   components: {
     Navbar
   },
   data: () => ({
     //
   }),
+  watch: {
+    $route(to) {
+      document.title = to.meta.title || "Helix";
+    }
+  }
 };
 </script>
 
 <style >
-.container{
+.container {
   width: 85%;
 }
 </style>
