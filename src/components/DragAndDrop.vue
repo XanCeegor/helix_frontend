@@ -67,13 +67,12 @@
             class="font-weight-thin"
             v-if="totalBytes >= maxUploadSize"
           >Max upload size is {{getFileSize(maxUploadSize)}}</div>
-          <v-tooltip top>
+          <v-tooltip top v-if="exeFiles.length > 0">
             <template v-slot:activator="{ on }">
               <div
                 v-on="on"
                 style="color: #c62828;"
                 class="font-weight-thin"
-                v-if="exeFiles.length > 0"
               >.exe files are not allowed</div>
             </template>
             <span>But you can add .exe files to an archive file (ZIP, 7Z, etc) and then upload them.</span>
