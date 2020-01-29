@@ -4,6 +4,7 @@ File sizes are capped at 250MB per file and the number of files per upload can b
 The frontend of Helix is designed to connect to an API backend to send and retrieve data. For the backend part of this project go to [Helix Backend](https://github.com/XanCeegor/helix_backend).
 
 A beta version of the site can be found here: [Helix](https://helix.xanceegor.dev/)
+Note: The backend of the Helix demo is hosted on a home server by myself. Due to fiber connection problems the backend is down for now and the demo does not function properly.
 
 ## Project setup
 ### clone the repo
